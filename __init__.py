@@ -8,7 +8,7 @@ def print_help():
     """
     print("Uso: python3 __init__.py <url> [--folder <folder>]")
     print("Descargar todas las imágenes de la página web <url> en la carpeta <folder>.")
-    print("Si no se especifica <folder>, se descargará en la carpeta ./img.")
+    print("Si no se especifica <folder>, se descargará en la carpeta ./imagenes.")
     sys.exit(0)
 
 def ensure_exists(folder: str):
