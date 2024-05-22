@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 from urllib import parse
 from pathlib import Path
 
+ALLOWED_MIME_TYPES = ["image/jpg", "image/png", "image/webp"]
+
+class NotAllowedImageException(Exception):
+    pass
+
 def read_html_from(url: str):
     """
         Lee HTML de forma remota y lo interpreta usando BeautifulSoup
@@ -20,16 +25,18 @@ def read_html_from(url: str):
     except Exception as err:
         print(err)
 
-def download_image(dir: str, url: str):
+def download_image(dir: str, url: str, *, allowed: list = ALLOWED_MIME_TYPES):
     """
         Descarga la imagen en `url` en el directorio `dir`.
     """
-    img = requests.get(url).content
+    response = requests.get(url)
+    if response.headers['Content-Type'] not in allowed:
+        raise NotAllowedImageException(f"Imagen no permitida: {url}")
+    img = response.content
     complete_path = dir + "/" + urlutils.get_filename_from_url(url)
     with open(complete_path, "b+w") as file:
         file.write(img)
 
-ALLOWED_EXTENSIONS = ["jpg", "png", "webp"]
 
 def scrap_images(absolute_url: str, folder: str, *, verbose: bool):
     """
@@ -55,7 +62,10 @@ def scrap_images(absolute_url: str, folder: str, *, verbose: bool):
         if verbose:
             print(f"Visitando {url}")
         extension = urlutils.get_extension_from_url(url)
-        if extension in ALLOWED_EXTENSIONS:
-            if verbose:
-                print(f"Descargando {url}")
+        try:
             download_image(folder, url)
+            if verbose:
+                print(f"Descargado {url}")
+        except NotAllowedImageException as err:
+            if verbose:
+                print("No se ha descargado la imagen: ", err)
